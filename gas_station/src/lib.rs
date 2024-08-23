@@ -468,6 +468,7 @@ impl Contract {
         env::panic_str(&error_str);
     }
 
+    #[payable]
     pub fn sign_next(&mut self, id: U64) -> Promise {
         <Self as Pause>::require_unpaused();
 
@@ -493,6 +494,13 @@ impl Contract {
             "Predecessor must be the transaction creator",
         );
 
+        // require a deposit to pass on to chain_key_token.ckt_sign_hash
+        let deposit = env::attached_deposit();
+        require!(
+          deposit > NearToken::from_yoctonear(1),
+          "Requires deposit > 1 yoctoNEAR"
+        );
+
         let (index, next_signature_request) = transaction
             .signature_requests
             .iter_mut()
@@ -504,7 +512,7 @@ impl Contract {
 
         #[allow(clippy::cast_possible_truncation)]
         let ret = ext_chain_key_token::ext(self.signer_contract_id.clone())
-            .with_attached_deposit(NearToken::from_yoctonear(1))
+            .with_attached_deposit(deposit)
             .ckt_sign_hash(
                 next_signature_request.token_id.clone(),
                 None,

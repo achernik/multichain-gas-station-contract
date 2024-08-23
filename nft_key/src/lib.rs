@@ -5,7 +5,7 @@ use lib::{
 };
 use near_sdk::{
     assert_one_yocto, collections::UnorderedMap, env, near, require, AccountId, AccountIdRef,
-    BorshStorageKey, Gas, PanicOnDefault, Promise, PromiseError, PromiseOrValue, PublicKey,
+    BorshStorageKey, Gas, NearToken, PanicOnDefault, Promise, PromiseError, PromiseOrValue, PublicKey,
 };
 use near_sdk_contract_tools::hook::Hook;
 #[allow(clippy::wildcard_imports)]
@@ -126,7 +126,12 @@ impl ChainKeyToken for NftKeyContract {
         payload: Vec<u8>,
         approval_id: Option<u32>,
     ) -> PromiseOrValue<String> {
-        assert_one_yocto();
+        // assert_one_yocto();
+        let deposit = env::attached_deposit();
+        require!(
+          deposit > NearToken::from_yoctonear(1),
+          "Requires deposit > 1 yoctoNEAR"
+        );
 
         let id = token_id.parse().expect_or_reject("Invalid token ID");
         let path = path.unwrap_or_default();
@@ -151,6 +156,7 @@ impl ChainKeyToken for NftKeyContract {
 
         PromiseOrValue::Promise(
             ext_signer::ext(self.signer_contract_id.clone())
+                .with_attached_deposit(deposit)
                 .sign(SignRequest::new(
                     payload.try_into().unwrap(),
                     make_path_string(&token_id, &path),
