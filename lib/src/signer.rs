@@ -43,10 +43,27 @@ pub struct SignResult {
     pub s_hex: String,
 }
 
+#[near(serializers = [json])]
+pub struct AffnPnt {
+    pub affine_point: String,
+}
+
+#[near(serializers = [json])]
+pub struct Sclr {
+    pub scalar: String,
+}
+
+#[near(serializers = [json])]
+pub struct SignatureResponse {
+    pub big_r: AffnPnt,
+    pub s: Sclr,
+    pub recovery_id: u8,
+}
+
 #[allow(clippy::ptr_arg)]
 #[ext_contract(ext_signer)]
 pub trait SignerInterface {
-    fn sign(&mut self, request: SignRequest) -> PromiseOrValue<SignResult>;
+    fn sign(&mut self, request: SignRequest) -> PromiseOrValue<SignatureResponse>;
     fn public_key(&self) -> near_sdk::PublicKey;
     fn derived_public_key(
         &self,
@@ -115,3 +132,4 @@ impl TryFrom<SignResult> for ethers_core::types::Signature {
         })
     }
 }
+
