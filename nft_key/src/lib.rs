@@ -1,6 +1,6 @@
 use lib::{
     chain_key::{ext_chain_key_token_approval_receiver, ChainKeyToken, ChainKeyTokenApproval},
-    signer::{ext_signer, SignRequest, SignResult, SignatureResponse},
+    signer::{ext_signer, SignRequest, SignatureResponse},
     Rejectable,
 };
 use near_sdk::{
@@ -204,13 +204,8 @@ impl NftKeyContract {
         #[callback_result] result: Result<SignatureResponse, PromiseError>,
     ) -> String {
         let signature_response = result.unwrap();
-        let mpc_signature = SignResult {
-            big_r_hex: signature_response.big_r.affine_point,
-            s_hex: signature_response.s.scalar,
-        };
-
         let ethers_signature: ethers_core::types::Signature =
-            mpc_signature.try_into().unwrap_or_reject();
+            signature_response.try_into().unwrap_or_reject();
         ethers_signature.to_string()
     }
 
